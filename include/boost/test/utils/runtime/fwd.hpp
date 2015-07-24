@@ -21,21 +21,22 @@
 // Boost
 #include <boost/shared_ptr.hpp>
 
-namespace boost {
+// STL
+#include <map>
 
-namespace BOOST_TEST_UTILS_RUNTIME_PARAM_NAMESPACE {
+namespace boost {
+namespace runtime {
 
 class parameter;
 
 class argument;
 typedef shared_ptr<argument> argument_ptr;
 typedef shared_ptr<argument const> const_argument_ptr;
+typedef std::map<std::string, const_argument_ptr> argument_store;
 
-template<typename T> class value_interpreter;
 template<typename T> class typed_argument;
 
-} // namespace BOOST_TEST_UTILS_RUNTIME_PARAM_NAMESPACE
-
+} // namespace runtime
 } // namespace boost
 
 #endif // BOOST_TEST_UTILS_RUNTIME_FWD_HPP

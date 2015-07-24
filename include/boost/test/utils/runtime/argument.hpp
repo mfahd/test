@@ -28,8 +28,7 @@
 #include <cassert>
 
 namespace boost {
-
-namespace BOOST_TEST_UTILS_RUNTIME_PARAM_NAMESPACE {
+namespace runtime {
 
 // ************************************************************************** //
 // **************              runtime::argument               ************** //
@@ -105,8 +104,7 @@ arg_value( argument& arg_ )
 
 //____________________________________________________________________________//
 
-} // namespace BOOST_TEST_UTILS_RUNTIME_PARAM_NAMESPACE
-
+} // namespace runtime
 } // namespace boost
 
 #endif // BOOST_TEST_UTILS_RUNTIME_ARGUMENT_HPP
