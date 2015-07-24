@@ -19,8 +19,7 @@
 #include <boost/test/utils/runtime/config.hpp>
 
 namespace boost {
-
-namespace BOOST_TEST_UTILS_RUNTIME_PARAM_NAMESPACE {
+namespace runtime {
 
 // ************************************************************************** //
 // **************              runtime::parameter              ************** //
@@ -31,8 +30,7 @@ public:
     virtual ~parameter() {}
 };
 
-} // namespace BOOST_TEST_UTILS_RUNTIME_PARAM_NAMESPACE
-
+} // namespace runtime
 } // namespace boost
 
 #endif // BOOST_TEST_UTILS_RUNTIME_PARAMETER_HPP
