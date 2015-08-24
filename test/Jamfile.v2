@@ -28,12 +28,15 @@ requirements_datasets = [ requires cxx11_decltype cxx11_hdr_random cxx11_hdr_tup
 
 #_________________________________________________________________________________________________#
 
+lib gcov : : <name>gcov : ;
+
 rule boost.test-self-test ( test-rule : test-suite : test-name : usage-variant ? : pattern_file * : source_files * : extra-libs ? : extra-options ? : requirements * )
 {
     source_files ?= $(test-suite)/$(test-name).cpp ;
     usage-variant ?= boost_unit_test_framework/<link>static ;
 
     return [ $(test-rule) $(source_files) ../build//$(usage-variant) $(extra-libs)
+             gcov
              : #args
              : $(pattern_file)
              : # Activating -pedantic finds more gotchas
@@ -43,6 +46,7 @@ rule boost.test-self-test ( test-rule : test-suite : test-name : usage-variant ?
                <toolset>gcc:<cxxflags>-Wno-long-long
                <toolset>gcc:<cxxflags>-Wno-variadic-macros
                <toolset>clang:<cxxflags>-Wno-c99-extensions
+               <toolset>gcc:<cxxflags>--coverage
                <warnings>all
                $(extra-options)
                $(requirements)
