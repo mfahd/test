@@ -162,20 +162,28 @@ add_test(NAME bt-unittest-dataset
 
 ####
 # TS writing-test-ts
-file(GLOB_RECURSE
-     BOOST_UTF_WRITING_TEST_TS
-     ${BOOST_TEST_UNITTESTS_FOLDER}/writing-test-ts/*.cpp)
 
-# organize files
-foreach(_h IN LISTS BOOST_UTF_WRITING_TEST_TS)
-  get_filename_component(_hh ${_h} ABSOLUTE)
-  get_filename_component(_name ${_h} NAME_WE)
-  file(RELATIVE_PATH _v ${BOOST_TEST_UNITTESTS_FOLDER} ${_hh})
-  get_filename_component(_v "${_v}" DIRECTORY)
-  add_executable(${_name} ${_hh})
-  set_target_properties(${_name} PROPERTIES FOLDER "Unit tests\\${_v}")
-  add_test(NAME bt-unittest-${_name}
-           COMMAND ${_name})
-endforeach()
+set(BOOST_UTF_TESTS_IND_FILES writing-test-ts execution_monitor-ts)
 
+foreach(_ts IN LISTS BOOST_UTF_TESTS_IND_FILES)
+
+  file(GLOB_RECURSE
+       _boost_utf_current_tsuite
+       ${BOOST_TEST_UNITTESTS_FOLDER}/${_ts}/*.cpp)
+
+
+  foreach(_h IN LISTS _boost_utf_current_tsuite)
+    get_filename_component(_hh ${_h} ABSOLUTE)
+    get_filename_component(_name ${_h} NAME_WE)
+    file(RELATIVE_PATH _v ${BOOST_TEST_UNITTESTS_FOLDER} ${_hh})
+    get_filename_component(_v "${_v}" DIRECTORY)
+    add_executable(${_name} ${_hh})
+    set_target_properties(${_name} PROPERTIES FOLDER "Unit tests/${_v}")
+    add_test(NAME bt-unittest-${_name}
+             COMMAND ${_name})
+  endforeach()
+
+  unset(_boost_utf_current_tsuite)
+
+endforeach() # test suite
 
