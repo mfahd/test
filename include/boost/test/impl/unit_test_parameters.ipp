@@ -519,7 +519,7 @@ register_parameters( rt::parameters_store& store )
     rt::option wait_for_debugger( WAIT_FOR_DEBUGGER, (
         rt::description = "Forces test module to wait for button to be pressed before starting test run.",
         rt::env_var = "BOOST_TEST_WAIT_FOR_DEBUGGER",
-        rt::help = "Parameter " + WAIT_FOR_DEUBGGER + " instructs the framework to pause before starting "
+        rt::help = "Parameter " + WAIT_FOR_DEBUGGER + " instructs the framework to pause before starting "
                    "test units execution, so that you can attach a debugger to running test module. By "
                    "default this parameters turned off."
     ));
