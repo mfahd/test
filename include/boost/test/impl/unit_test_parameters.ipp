@@ -41,9 +41,9 @@
 // Boost
 #include <boost/config.hpp>
 #include <boost/test/detail/suppress_warnings.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/test/detail/enable_warnings.hpp>
 #include <boost/optional.hpp>
+#include <boost/cstdlib.hpp>
 
 // STL
 #include <cstdlib>
@@ -409,6 +409,21 @@ register_parameters( rt::parameters_store& store )
 
     ///////////////////////////////////////////////
 
+    rt::parameter<std::string> report_mem_leaks( REPORT_MEM_LEAKS, (
+        rt::description = "File where to report memory leaks to.",
+        rt::env_var = "BOOST_TEST_REPORT_MEMORY_LEAKS_TO",
+        rt::default_value = std::string(),
+        rt::value_hint = "<file name>",
+        rt::help = "Parameter " + REPORT_MEM_LEAKS + " allows to specify a file where to report "
+                   "memory leaks to. The parameter does not have default value. If it is not specified, "
+                   "memory leaks (if any) are reported to the standard error stream."
+    ));
+
+    report_mem_leaks.add_cla_id( "--", REPORT_MEM_LEAKS, "=" );
+    store.add( report_mem_leaks );
+
+    ///////////////////////////////////////////////
+
     rt::parameter<std::string> report_sink( REPORT_SINK, (
         rt::description = "Specifies report sink: stderr(default), stdout or file name.",
         rt::env_var = "BOOST_TEST_REPORT_SINK",
@@ -423,21 +438,6 @@ register_parameters( rt::parameters_store& store )
     report_sink.add_cla_id( "--", REPORT_SINK, "=" );
     report_sink.add_cla_id( "-", "e", " " );
     store.add( report_sink );
-
-    ///////////////////////////////////////////////
-
-    rt::parameter<std::string> report_mem_leaks( REPORT_MEM_LEAKS, (
-        rt::description = "File where to report memory leaks to.",
-        rt::env_var = "BOOST_TEST_REPORT_MEMORY_LEAKS_TO",
-        rt::default_value = std::string(),
-        rt::value_hint = "<file name>",
-        rt::help = "Parameter " + REPORT_MEM_LEAKS + " allows to specify a file where to report "
-                   "memory leaks to. The parameter does not have default value. If it is not specified, "
-                   "memory leaks (if any) are reported to the standard error stream."
-    ));
-
-    report_mem_leaks.add_cla_id( "--", REPORT_MEM_LEAKS, "=" );
-    store.add( report_mem_leaks );
 
     ///////////////////////////////////////////////
 
@@ -534,7 +534,12 @@ register_parameters( rt::parameters_store& store )
         rt::description = "Help for framework parameters.",
         rt::optional_value = std::string(),
         rt::value_hint = "<parameter name>",
-        rt::help = ""
+        rt::help = "Parameter " + HELP + " displays help on the framework's parameters. "
+                   "The parameter accepts an optional argument value. If present, an argument value is "
+                   "interpreted as a parameter name (name guessing works as well, so for example "
+                   "--help=rand displays help on the parameter random). If the parameter name is unknown "
+                   "or ambiguous error is reported. If argument value is absent, a summary of all "
+                   "framework's parameter is displayed."
     ));
     help.add_cla_id( "--", HELP, "=" );
     store.add( help );
@@ -570,7 +575,7 @@ init( int& argc, char** argv )
 
         // Parse CLA they take precedence over  environment
         parser.reset( new rt::cla::parser( s_parameters_store, (rt::end_of_params = "--", rt::negation_prefix = "no_") ) );
-        parser->parse( argc, argv, s_arguments_store );
+        argc = parser->parse( argc, argv, s_arguments_store );
 
         // Try to fetch missing arguments from environment
         rt::env::fetch_absent( s_parameters_store, s_arguments_store );
@@ -581,11 +586,11 @@ init( int& argc, char** argv )
         // Report help if requested
         if( runtime_config::get<bool>( USAGE ) ) {
             parser->usage( std::cerr );
-            BOOST_TEST_I_THROW( framework::nothing_to_test() );
+            BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_success ) );
         }
         else if( s_arguments_store.has( HELP ) ) {
             parser->help( std::cerr, s_parameters_store, runtime_config::get<std::string>( HELP ) );
-            BOOST_TEST_I_THROW( framework::nothing_to_test() );
+            BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_success ) );
         }
 
         // A bit of business logic: output_format takes precedence over log/report formats
@@ -604,7 +609,7 @@ init( int& argc, char** argv )
         BOOST_TEST_FOREACH( rt::cstring, name, ex.m_amb_candidates )
             std::cerr << "   " << name << "\n";
 
-        BOOST_TEST_I_THROW( framework::nothing_to_test() );
+        BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_exception_failure ) );
     }
     BOOST_TEST_I_CATCH( rt::unrecognized_param, ex ) {
         std::cerr << ex.msg << "\n";
@@ -620,7 +625,7 @@ init( int& argc, char** argv )
             parser->usage( std::cerr );
         }
         
-        BOOST_TEST_I_THROW( framework::nothing_to_test() );
+        BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_exception_failure ) );
     }
     BOOST_TEST_I_CATCH( rt::input_error, ex ) {
         std::cerr << ex.msg << "\n\n";
@@ -628,7 +633,7 @@ init( int& argc, char** argv )
         if( parser )
             parser->usage( std::cerr, ex.param_name );
         
-        BOOST_TEST_I_THROW( framework::nothing_to_test() );
+        BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_exception_failure ) );
     }
 }
 
