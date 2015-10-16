@@ -163,7 +163,7 @@ add_test(NAME bt-unittest-dataset
 ####
 # TS writing-test-ts
 
-set(BOOST_UTF_TESTS_IND_FILES writing-test-ts execution_monitor-ts)
+set(BOOST_UTF_TESTS_IND_FILES writing-test-ts execution_monitor-ts framework-ts)
 
 foreach(_ts IN LISTS BOOST_UTF_TESTS_IND_FILES)
 
