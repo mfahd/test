@@ -20,9 +20,6 @@
 
 #include <boost/test/detail/suppress_warnings.hpp>
 
-// STL
-#include <algorithm>
-
 //____________________________________________________________________________//
 
 namespace boost {
