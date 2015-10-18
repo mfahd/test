@@ -212,6 +212,11 @@ BOOST_AUTO_TEST_CASE( test_mutable_arg )
 
 //____________________________________________________________________________//
 
+// this asserts functionality for non copyable classes, C++11 only
+#if    !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) \
+    && !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS) \
+    && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
 namespace test_noncopyable_arg {
 
 struct NC {
@@ -239,6 +244,7 @@ BOOST_AUTO_TEST_CASE( test_noncopyable_arg )
 }
 
 } // test_noncopyable_arg
+#endif
 
 //____________________________________________________________________________//
 
@@ -378,7 +384,7 @@ nfp::typed_keyword<int, struct k2_t> k2;
 template<typename Params, typename T>
 void dotest0( Params const& p, T& targ )
 {
-    targ = nfp::opt_get( p, k1, T{} );
+    targ = nfp::opt_get( p, k1, T() );
 }
 
 BOOST_AUTO_TEST_CASE( test_optional_get )
