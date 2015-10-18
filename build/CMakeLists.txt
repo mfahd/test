@@ -38,9 +38,9 @@ if(NOT MSVC)
   check_cxx_compiler_flag(-std=c++0x HAS_CXX0X_FLAG)
   if(HAS_CXX11_FLAG)
     message(STATUS "Compiling with C++11 support")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
   elseif(HAS_CXX0X_FLAG)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
   endif()
 endif()
 
@@ -163,7 +163,12 @@ add_test(NAME bt-unittest-dataset
 ####
 # TS writing-test-ts
 
-set(BOOST_UTF_TESTS_IND_FILES writing-test-ts execution_monitor-ts framework-ts)
+set(BOOST_UTF_TESTS_IND_FILES
+    writing-test-ts
+    execution_monitor-ts
+    framework-ts
+    usage-variants-ts
+    utils-ts)
 
 foreach(_ts IN LISTS BOOST_UTF_TESTS_IND_FILES)
 
