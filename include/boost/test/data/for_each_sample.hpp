@@ -20,6 +20,9 @@
 
 #include <boost/test/detail/suppress_warnings.hpp>
 
+// needed for std::min
+#include <algorithm>
+
 //____________________________________________________________________________//
 
 namespace boost {
