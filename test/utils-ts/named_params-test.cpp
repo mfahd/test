@@ -183,6 +183,11 @@ BOOST_AUTO_TEST_CASE( test_const_arg )
 
 //____________________________________________________________________________//
 
+// the unit tests below assert functionality for non copyable classes, C++11 only
+#if    !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) \
+    && !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS) \
+    && !defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
+
 namespace test_mutable_arg {
 
 nfp::typed_keyword<int, struct k1_t> k1;
@@ -212,10 +217,6 @@ BOOST_AUTO_TEST_CASE( test_mutable_arg )
 
 //____________________________________________________________________________//
 
-// this asserts functionality for non copyable classes, C++11 only
-#if    !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) \
-    && !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS) \
-    && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 namespace test_noncopyable_arg {
 
@@ -244,7 +245,9 @@ BOOST_AUTO_TEST_CASE( test_noncopyable_arg )
 }
 
 } // test_noncopyable_arg
-#endif
+
+
+#endif /* C++11 only */
 
 //____________________________________________________________________________//
 
@@ -513,6 +516,10 @@ BOOST_AUTO_TEST_CASE( test_optional_append )
 
 //____________________________________________________________________________//
 
+#if    !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) \
+    && !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS) \
+    && !defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
+
 namespace test_no_params {
 
 nfp::typed_keyword<int, struct k1_t> k1;
@@ -530,3 +537,4 @@ BOOST_AUTO_TEST_CASE( test_no_params )
 }
 
 } // test_no_params
+#endif
