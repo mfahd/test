@@ -46,7 +46,7 @@ rule boost.test-self-test ( test-rule : test-suite : test-name : usage-variant ?
                <toolset>gcc:<cxxflags>-Wno-long-long
                <toolset>gcc:<cxxflags>-Wno-variadic-macros
                <toolset>clang:<cxxflags>-Wno-c99-extensions
-               # <toolset>gcc:<cxxflags>--coverage
+#               <toolset>gcc:<cxxflags>--coverage
                <warnings>all
                $(extra-options)
                $(requirements)
