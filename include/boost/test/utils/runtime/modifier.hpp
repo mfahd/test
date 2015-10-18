@@ -46,7 +46,7 @@ auto const& callback        = unit_test::static_constant<nfp::keyword<struct cal
 
 template<typename EnumType>
 using enum_values = unit_test::static_constant<
-  nfp::typed_keyword<std::initializer_list<std::pair<cstring,EnumType>>, struct enum_values_t>
+  nfp::typed_keyword<std::initializer_list<std::pair<const cstring,EnumType>>, struct enum_values_t>
 >;
 
 #else
