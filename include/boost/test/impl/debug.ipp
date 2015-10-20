@@ -817,7 +817,7 @@ attach_debugger( bool break_or_continue )
     DWORD type = REG_SZ;
 
     bool b_read_key = s_info.m_reg_query_value && 
-          (*s_info.m_reg_query_value)(
+          ((*s_info.m_reg_query_value)(
             reg_key,                            // handle of open key
             "Debugger",                         // name of subkey to query
             0,                                  // reserved
