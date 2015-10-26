@@ -15,6 +15,8 @@
 #ifndef BOOST_TEST_UTILS_RUNTIME_CLA_ARGV_TRAVERSER_HPP
 #define BOOST_TEST_UTILS_RUNTIME_CLA_ARGV_TRAVERSER_HPP
 
+#include <algorithm>
+
 // Boost.Test Runtime parameters
 #include <boost/test/utils/runtime/fwd.hpp>
 
@@ -32,7 +34,8 @@ namespace cla {
 static const char END_OF_TOKEN = '\0';
 
 class argv_traverser {
-    typedef char const** argv_type;
+    typedef char const*         argv_element_type; //!@todo
+    typedef argv_element_type*  argv_type;
 public:
     /// Constructs traverser based on argc/argv pair
     /// argv is taken "by reference" and later can be
@@ -44,18 +47,37 @@ public:
     , m_arg_pos( 0 )
     , m_argv( argv )
     {
+        for(std::size_t i = 0; i < argc; i++)
+            m_remainder.push_back(std::make_pair(false, argv + i));
         next_arg();
+    }
+
+    /// Eat the argument (does not appear in the remainder)
+    void        eat(int index)
+    {
+        std::list< std::pair<bool, argv_type> >::iterator it(m_remainder.begin());
+        std::advance(it, index);
+        it->first = true;
     }
 
     /// Updates argv to contain the remainder of the input
     /// and returns new argc
     int         remainder()
     {
-        std::size_t new_argc = m_argc - m_curr_arg + 1;
+        std::size_t new_argc = 0;
 
-        if( new_argc != m_argc )
-            for( std::size_t i = 1; i < new_argc ; ++i )
-                m_argv[i] = m_argv[m_curr_arg + i - 1];
+        for(  std::list< std::pair<bool, argv_type> >::const_iterator it(m_remainder.begin());
+              it != m_remainder.end() ;
+              ++it )
+        {
+            if(it->first)
+                continue; // if eaten, continue
+
+            new_argc ++;
+            m_argv[new_argc] = *(it->second);
+            m_remainder.erase(it); // so that the method is idempotent
+        }
+
 
         m_argv[1] += m_arg_pos;
 
@@ -136,6 +158,7 @@ private:
     std::size_t m_arg_size;     // current argument size
     std::size_t m_arg_pos;      // current argument position
     argv_type   m_argv;         // all arguments
+    std::list< std::pair<bool, argv_type> > m_remainder;
 };
 
 } // namespace cla

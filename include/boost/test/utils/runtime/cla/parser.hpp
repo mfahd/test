@@ -153,6 +153,11 @@ public:
         // Set up the traverser
         argv_traverser tr( argc, (char const**)argv );
 
+#if (BOOST_VERSION <= 1 * 100000 + 64 * 1000)
+        // we remove deprecation warning at boost v1.64
+        bool deprecated_message = false;
+#endif
+
         // Loop till we reach end of input
         while( !tr.eoi() ) {
             cstring curr_token = tr.current_token();
@@ -173,6 +178,23 @@ public:
             // Locate trie corresponding to found prefix and skip it in the input
             trie_ptr curr_trie = m_param_trie[prefix];
 
+#if (BOOST_VERSION <= 1 * 100000 + 64 * 1000)
+            // unrecognized parameter
+            if(!curr_trie && !deprecated_message)
+            {
+                deprecated_message = true;
+            }
+
+            if(!curr_trie)
+            {
+                // pass it to the reminder
+                tr.skip( prefix.size() );
+                continue;
+            }
+
+
+#endif
+
             BOOST_TEST_I_ASSRT( curr_trie,
                                 format_error() << "Unrecognized parameter prefix in the argument "
                                                << curr_token );
@@ -180,14 +202,25 @@ public:
             tr.skip( prefix.size() );
 
             // Locate parameter based on a name and skip it in the input
-            locate_result locate_res = locate_parameter( curr_trie, name, curr_token );
-            parameter_cla_id const& found_id    = locate_res.first;
-            basic_param_ptr         found_param = locate_res.second;
+            parameter_cla_id const *found_id = 0;
+            basic_param_ptr         found_param;
+            try
+            {
+                locate_result locate_res = locate_parameter( curr_trie, name, curr_token );
+                found_id    = &locate_res.first;
+                found_param = locate_res.second;
+            }
+            catch(ambiguous_param& p)
+            {
+                continue;
+            }
+
+
 
             if( negative_form ) {
-                BOOST_TEST_I_ASSRT( found_id.m_negatable,
+                BOOST_TEST_I_ASSRT( found_id->m_negatable,
                                     format_error( found_param->p_name ) 
-                                        << "Parameter tag " << found_id.m_tag << " is not negatable." );
+                                        << "Parameter tag " << found_id->m_tag << " is not negatable." );
 
                 tr.skip( m_negation_prefix.size() );
             }
@@ -199,7 +232,7 @@ public:
             // Skip validations if parameter has optional value and we are at the end of token
             if( !value_separator.is_empty() || !found_param->p_has_optional_value ) {
                 // Validate and skip value separator in the input
-                BOOST_TEST_I_ASSRT( found_id.m_value_separator == value_separator,
+                BOOST_TEST_I_ASSRT( found_id->m_value_separator == value_separator,
                                     format_error( found_param->p_name ) 
                                         << "Invalid separator for the parameter "
                                         << found_param->p_name
