@@ -155,12 +155,17 @@ public:
 
 #if (BOOST_VERSION <= 1 * 100000 + 64 * 1000)
         // we remove deprecation warning at boost v1.64
-        bool deprecated_message = false;
+        bool valid_non_deprecated = false;
+        std::vector<std::size_t> indices_deprecated;
+        std::size_t current_token_index = 0;
+        std::vector< std::pair<cstring, ambiguous_param> > ambiguous_params;
+        std::vector< std::pair<cstring, unrecognized_param> > unrecognized_params;
 #endif
 
         // Loop till we reach end of input
         while( !tr.eoi() ) {
             cstring curr_token = tr.current_token();
+            current_token_index ++;
 
             cstring prefix;
             cstring name;
@@ -170,30 +175,23 @@ public:
             // Perform format validations and split the argument into prefix, name and separator
             // False return value indicates end of params indicator is met
             if( !validate_token_format( curr_token, prefix, name, value_separator, negative_form ) ) {
-                // get rid of "end of params" token
+                // get rid of "end of params" token. If we are here, we suppose that the user
+                // gave a new version of the CLA, which does not tolerate not known parameters
                 tr.get_token();
+                valid_non_deprecated = true;
                 break;
             }
 
             // Locate trie corresponding to found prefix and skip it in the input
             trie_ptr curr_trie = m_param_trie[prefix];
 
-#if (BOOST_VERSION <= 1 * 100000 + 64 * 1000)
-            // unrecognized parameter
-            if(!curr_trie && !deprecated_message)
-            {
-                deprecated_message = true;
-            }
-
+            // not starting with any of the prefix
             if(!curr_trie)
             {
-                // pass it to the reminder
-                tr.skip( prefix.size() );
+                indices_deprecated.push_back(current_token_index);
+                tr.get_token();
                 continue;
             }
-
-
-#endif
 
             BOOST_TEST_I_ASSRT( curr_trie,
                                 format_error() << "Unrecognized parameter prefix in the argument "
@@ -212,9 +210,20 @@ public:
             }
             catch(ambiguous_param& p)
             {
+                indices_deprecated.push_back(current_token_index);
+                ambiguous_params.push_back(std::make_pair(name, p));
+                // next token
+                tr.get_token();
                 continue;
             }
-
+            catch(unrecognized_param& p)
+            {
+                indices_deprecated.push_back(current_token_index);
+                unrecognized_params.push_back(std::make_pair(name, p));
+                // next token
+                tr.get_token();
+                continue;
+            }
 
 
             if( negative_form ) {
@@ -259,6 +268,39 @@ public:
 
             // Produce argument value
             found_param->produce_argument( value, negative_form, res );
+        }
+
+        // we are using a form known for being the new CLA
+        if(valid_non_deprecated)
+        {
+            if(ambiguous_params.size())
+            {
+              throw ambiguous_param(ambiguous_params[0].second);
+            }
+
+            if(unrecognized_params.size())
+            {
+              throw unrecognized_param(unrecognized_params[0].second);
+            }
+        }
+
+        // arguments exhausted
+        if(tr.eoi())
+        {
+            for(std::size_t argc_index = 1, i = 0;
+                i < indices_deprecated.size() && argc_index < argc;
+                argc_index++)
+            {
+                if(argc_index != indices_deprecated[i])
+                {
+                    tr.eat(argc_index);
+                }
+                else
+                {
+                    i++;
+                }
+            }
+
         }
 
         // generate the remainder and return it's size

@@ -16,6 +16,7 @@
 #define BOOST_TEST_UTILS_RUNTIME_CLA_ARGV_TRAVERSER_HPP
 
 #include <algorithm>
+#include <list>
 
 // Boost.Test Runtime parameters
 #include <boost/test/utils/runtime/fwd.hpp>
@@ -36,6 +37,7 @@ static const char END_OF_TOKEN = '\0';
 class argv_traverser {
     typedef char const*         argv_element_type; //!@todo
     typedef argv_element_type*  argv_type;
+    typedef std::list< std::pair<bool, argv_type> >::iterator iterator_t;
 public:
     /// Constructs traverser based on argc/argv pair
     /// argv is taken "by reference" and later can be
@@ -47,15 +49,17 @@ public:
     , m_arg_pos( 0 )
     , m_argv( argv )
     {
-        for(std::size_t i = 0; i < argc; i++)
+        for(std::size_t i = 1; i < argc; i++)
             m_remainder.push_back(std::make_pair(false, argv + i));
+
+        m_it = m_remainder.begin();
         next_arg();
     }
 
     /// Eat the argument (does not appear in the remainder)
     void        eat(int index)
     {
-        std::list< std::pair<bool, argv_type> >::iterator it(m_remainder.begin());
+        iterator_t it(m_remainder.begin());
         std::advance(it, index);
         it->first = true;
     }
@@ -66,7 +70,7 @@ public:
     {
         std::size_t new_argc = 0;
 
-        for(  std::list< std::pair<bool, argv_type> >::const_iterator it(m_remainder.begin());
+        for(  iterator_t it(m_remainder.begin());
               it != m_remainder.end() ;
               ++it )
         {
@@ -127,7 +131,7 @@ public:
         return m_argv[m_curr_arg][m_arg_pos++];
     }
 
-    /// Returns all the characters ramaining in the current token and moves
+    /// Returns all the characters remaining in the current token and moves
     /// to next token
     cstring     get_token()
     {
@@ -145,6 +149,7 @@ private:
     void        next_arg()
     {
         ++m_curr_arg;
+        ++m_it;
 
         if( !eoi() ) {
             m_arg_size = ::strlen( m_argv[m_curr_arg] );
@@ -159,6 +164,7 @@ private:
     std::size_t m_arg_pos;      // current argument position
     argv_type   m_argv;         // all arguments
     std::list< std::pair<bool, argv_type> > m_remainder;
+    iterator_t  m_it;
 };
 
 } // namespace cla
