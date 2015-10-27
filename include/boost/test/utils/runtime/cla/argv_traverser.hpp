@@ -60,7 +60,7 @@ public:
     void        eat(int index)
     {
         iterator_t it(m_remainder.begin());
-        std::advance(it, index);
+        std::advance(it, index-1);
         it->first = true;
     }
 

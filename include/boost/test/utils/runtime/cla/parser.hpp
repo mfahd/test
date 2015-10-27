@@ -27,10 +27,17 @@
 #include <boost/algorithm/cxx11/all_of.hpp> // !! ?? unnecessary after cxx11
 
 // STL
-// !! ?? #include <unordered_set>
 #include <set>
 
 #include <boost/test/detail/suppress_warnings.hpp>
+
+// first support of the new cla
+#define BOOST_TEST_VERSION_NEW_CLA 1 * 100000 + 60 * 1000
+#if (BOOST_VERSION <= (BOOST_TEST_VERSION_NEW_CLA + 4 * 1000))
+    #define BOOST_TEST_SUPPORT_OLD_CLA_WITH_DEPRECATION
+#endif
+//#undef BOOST_TEST_SUPPORT_OLD_CLA_WITH_DEPRECATION
+
 
 namespace boost {
 namespace runtime {
@@ -153,10 +160,9 @@ public:
         // Set up the traverser
         argv_traverser tr( argc, (char const**)argv );
 
-#if (BOOST_VERSION <= 1 * 100000 + 64 * 1000)
-        // we remove deprecation warning at boost v1.64
-        bool valid_non_deprecated = false;
-        std::vector<std::size_t> indices_deprecated;
+#ifdef BOOST_TEST_SUPPORT_OLD_CLA_WITH_DEPRECATION
+        bool new_cla_format = false;
+        std::vector<std::size_t> indices_unknown_parameters;
         std::size_t current_token_index = 0;
         std::vector< std::pair<cstring, ambiguous_param> > ambiguous_params;
         std::vector< std::pair<cstring, unrecognized_param> > unrecognized_params;
@@ -165,7 +171,9 @@ public:
         // Loop till we reach end of input
         while( !tr.eoi() ) {
             cstring curr_token = tr.current_token();
+#ifdef BOOST_TEST_SUPPORT_OLD_CLA_WITH_DEPRECATION
             current_token_index ++;
+#endif
 
             cstring prefix;
             cstring name;
@@ -178,52 +186,63 @@ public:
                 // get rid of "end of params" token. If we are here, we suppose that the user
                 // gave a new version of the CLA, which does not tolerate not known parameters
                 tr.get_token();
-                valid_non_deprecated = true;
+#ifdef BOOST_TEST_SUPPORT_OLD_CLA_WITH_DEPRECATION
+                new_cla_format = true;
+#endif
                 break;
             }
 
             // Locate trie corresponding to found prefix and skip it in the input
             trie_ptr curr_trie = m_param_trie[prefix];
 
+#ifdef BOOST_TEST_SUPPORT_OLD_CLA_WITH_DEPRECATION
             // not starting with any of the prefix
-            if(!curr_trie)
-            {
-                indices_deprecated.push_back(current_token_index);
+            if(!curr_trie) {
+                indices_unknown_parameters.push_back(current_token_index);
                 tr.get_token();
                 continue;
             }
-
+#else
             BOOST_TEST_I_ASSRT( curr_trie,
                                 format_error() << "Unrecognized parameter prefix in the argument "
                                                << curr_token );
+#endif
 
             tr.skip( prefix.size() );
 
             // Locate parameter based on a name and skip it in the input
             parameter_cla_id const *found_id = 0;
             basic_param_ptr         found_param;
-            try
-            {
+            try {
                 locate_result locate_res = locate_parameter( curr_trie, name, curr_token );
                 found_id    = &locate_res.first;
                 found_param = locate_res.second;
             }
-            catch(ambiguous_param& p)
-            {
-                indices_deprecated.push_back(current_token_index);
+#ifdef BOOST_TEST_SUPPORT_OLD_CLA_WITH_DEPRECATION
+            catch(ambiguous_param& p) {
+                indices_unknown_parameters.push_back(current_token_index);
                 ambiguous_params.push_back(std::make_pair(name, p));
                 // next token
                 tr.get_token();
                 continue;
             }
-            catch(unrecognized_param& p)
-            {
-                indices_deprecated.push_back(current_token_index);
+            catch(unrecognized_param& p) {
+                indices_unknown_parameters.push_back(current_token_index);
                 unrecognized_params.push_back(std::make_pair(name, p));
                 // next token
                 tr.get_token();
                 continue;
             }
+#else
+            catch(ambiguous_param& p) {
+                // once the support for the old cla is dropped, we can remove the
+                // try/catch there and propagate the exception to the caller.
+                throw p;
+            }
+            catch(unrecognized_param& p) {
+                throw p;
+            }
+#endif
 
 
             if( negative_form ) {
@@ -270,38 +289,33 @@ public:
             found_param->produce_argument( value, negative_form, res );
         }
 
+#ifdef BOOST_TEST_SUPPORT_OLD_CLA_WITH_DEPRECATION
         // we are using a form known for being the new CLA
-        if(valid_non_deprecated)
-        {
-            if(ambiguous_params.size())
-            {
-              throw ambiguous_param(ambiguous_params[0].second);
+        if(new_cla_format) {
+            if(ambiguous_params.size()) {
+                throw ambiguous_param(ambiguous_params[0].second);
             }
 
-            if(unrecognized_params.size())
-            {
-              throw unrecognized_param(unrecognized_params[0].second);
+            if(unrecognized_params.size()) {
+                throw unrecognized_param(unrecognized_params[0].second);
             }
         }
 
         // arguments exhausted
-        if(tr.eoi())
-        {
-            for(std::size_t argc_index = 1, i = 0;
-                i < indices_deprecated.size() && argc_index < argc;
-                argc_index++)
-            {
-                if(argc_index != indices_deprecated[i])
-                {
+        if(tr.eoi()) {
+            for(std::size_t argc_index = 1, deprecated_index = 0;
+                deprecated_index < indices_unknown_parameters.size() && argc_index < argc;
+                argc_index++) {
+
+                if(argc_index != indices_unknown_parameters[deprecated_index]) {
                     tr.eat(argc_index);
                 }
-                else
-                {
-                    i++;
+                else {
+                    deprecated_index++;
                 }
             }
-
         }
+#endif
 
         // generate the remainder and return it's size
         return tr.remainder();
