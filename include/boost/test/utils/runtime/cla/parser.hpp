@@ -303,7 +303,7 @@ public:
 
         // arguments exhausted
         if(tr.eoi()) {
-            for(std::size_t argc_index = 1, deprecated_index = 0;
+            for(int argc_index = 1, deprecated_index = 0;
                 deprecated_index < indices_unknown_parameters.size() && argc_index < argc;
                 argc_index++) {
 

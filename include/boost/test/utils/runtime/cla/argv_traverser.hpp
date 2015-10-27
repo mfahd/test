@@ -51,8 +51,6 @@ public:
     {
         for(std::size_t i = 1; i < argc; i++)
             m_remainder.push_back(std::make_pair(false, argv + i));
-
-        m_it = m_remainder.begin();
         next_arg();
     }
 
@@ -72,8 +70,7 @@ public:
 
         for(  iterator_t it(m_remainder.begin());
               it != m_remainder.end() ;
-              ++it )
-        {
+              ++it ) {
             if(it->first)
                 continue; // if eaten, continue
 
@@ -150,7 +147,6 @@ private:
     void        next_arg()
     {
         ++m_curr_arg;
-        ++m_it;
 
         if( !eoi() ) {
             m_arg_size = ::strlen( m_argv[m_curr_arg] );
@@ -165,7 +161,6 @@ private:
     std::size_t m_arg_pos;      // current argument position
     argv_type   m_argv;         // all arguments
     std::list< std::pair<bool, argv_type> > m_remainder;
-    iterator_t  m_it;
 };
 
 } // namespace cla
