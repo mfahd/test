@@ -77,15 +77,16 @@ public:
             if(it->first)
                 continue; // if eaten, continue
 
-            new_argc ++;
+            new_argc ++;  // we start at argv[1]
             m_argv[new_argc] = *(it->second);
-            m_remainder.erase(it); // so that the method is idempotent
         }
 
+        m_remainder.clear(); // so that the method is idempotent
 
-        m_argv[1] += m_arg_pos;
+        // Raffi: ???
+        //m_argv[1] += m_arg_pos;
 
-        return (int)new_argc;
+        return (int)new_argc + 1; // argv starts at 1, we still have argv[0]
     }
 
     /// Returns true, if we reached end on input
