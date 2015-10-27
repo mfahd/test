@@ -49,7 +49,7 @@ public:
     , m_arg_pos( 0 )
     , m_argv( argv )
     {
-        for(std::size_t i = 1; i < argc; i++)
+        for(int i = 1; i < argc; i++)
             m_remainder.push_back(std::make_pair(false, argv + i));
         next_arg();
     }
